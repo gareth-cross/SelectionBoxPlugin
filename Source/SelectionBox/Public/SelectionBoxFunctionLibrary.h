@@ -118,6 +118,26 @@ public:
 	                                                                       const FVector& Origin,
 	                                                                       const FVector& Extent);
 
+	// Version of the above that accepts the pre-computed planes as an argument.
+	static ETransformedBoxTestResult SelectionRegionOverlapsTransformedBox(const FSelectionRegion& Region,
+	                                                                       const FRegionPlanes& Planes,
+	                                                                       const FTransform& BoxTransform,
+	                                                                       const FVector& Origin,
+	                                                                       const FVector& Extent);
+
+	/**
+	 * Check if the provided region contains any part of the specified world-aligned sphere.
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	static bool SelectionRegionOverlapsSphere(const FSelectionRegion& Region,
+	                                          const FVector& SphereOrigin,
+	                                          float Radius);
+
+	// Version of the above that accepts the pre-computed planes as an argument.
+	static bool SelectionRegionOverlapsSphere(const FRegionPlanes& Planes,
+	                                          const FVector& SphereOrigin,
+	                                          float Radius);
+
 	/**
 	 * Create FSelectionRegion from a pair of pixel coordinates that define a selection box in screen space.
 	 *

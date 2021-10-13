@@ -209,6 +209,13 @@ constexpr IntPair BoxEdges[12] = {
 ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsTransformedBox(
 	const FSelectionRegion& Region, const FTransform& BoxTransform, const FVector& Origin, const FVector& Extent)
 {
+	return SelectionRegionOverlapsTransformedBox(Region, Region.ComputePlanes(), BoxTransform, Origin, Extent);
+}
+
+ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsTransformedBox(
+	const FSelectionRegion& Region, const FRegionPlanes& Planes, const FTransform& BoxTransform, const FVector& Origin,
+	const FVector& Extent)
+{
 	// Convert box corner points to world coordinates:
 	FVector WorldPts[8];
 	for (int i = 0; i < 8; ++i)
@@ -216,9 +223,6 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		const FVector Multiplier{PointMultipliers[i][0], PointMultipliers[i][1], PointMultipliers[i][2]};
 		WorldPts[i] = BoxTransform.TransformPosition(Extent * Multiplier + Origin);
 	}
-
-	// Compute the planes that define our region.
-	const FRegionPlanes Planes = Region.ComputePlanes();
 
 	//	Assign regions to points
 	uint8 Regions[8];
@@ -314,6 +318,33 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		return ETransformedBoxTestResult::SelectionCornerIntersectsBox;
 	}
 	return ETransformedBoxTestResult::NoIntersection;
+}
+
+bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsSphere(const FSelectionRegion& Region,
+                                                                 const FVector& SphereOrigin, const float Radius)
+{
+	// Compute the region planes (some wasted work here...)
+	return SelectionRegionOverlapsSphere(Region.ComputePlanes(), SphereOrigin, Radius);
+}
+
+bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsSphere(const FRegionPlanes& Planes,
+                                                                 const FVector& SphereOrigin,
+                                                                 const float Radius)
+{
+	const float DLeft = Planes.LeftPlane.PlaneDot(SphereOrigin);
+	const float DRight = Planes.RightPlane.PlaneDot(SphereOrigin);
+	const float DTop = Planes.TopPlane.PlaneDot(SphereOrigin);
+	const float DBottom = Planes.BottomPlane.PlaneDot(SphereOrigin);
+
+	// Determine whether we are either (1) within the radius (0 < D < R) or behind the plane altogether (D < 0)
+	const bool bWithinRadiusOfLeftPlane = DLeft < Radius;
+	const bool bWithinRadiusOfRightPlane = DRight < Radius;
+	const bool bWithinRadiusOfTopPlane = DTop < Radius;
+	const bool bWithinRadiusOfBottomPlane = DBottom < Radius;
+
+	// need to be either behind or within all 4
+	return bWithinRadiusOfLeftPlane && bWithinRadiusOfRightPlane && bWithinRadiusOfTopPlane &&
+		bWithinRadiusOfBottomPlane;
 }
 
 bool USelectionBoxFunctionLibrary::CreateSelectionRegionForBoxCorners(APlayerController* const Controller,
