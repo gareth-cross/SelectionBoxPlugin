@@ -237,7 +237,8 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		const uint8 RegionFirst = Regions[Line.i];
 		const uint8 RegionSecond = Regions[Line.j];
 		const bool bMightIntersect = (RegionFirst & RegionSecond) == 0;
-		constexpr bool bUseEarlyExit = true;
+		constexpr bool bUseEarlyExit = true; //	Shaves about ~15% off if a lot of boxes don't overlap at all.
+
 		// If this test fails (cohen sutherland algorithm) then we can early exit this line, it can't possibly intersect
 		if (!bMightIntersect && bUseEarlyExit)
 		{
@@ -255,8 +256,7 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		if (bIntersectsLeft)
 		{
 			// check that we are within the top/bottom plane
-			const uint8 RegionBits = DetermineRegion(IntersectionPt, Planes);
-			if (RegionBits == 0 || RegionBits == 4 || RegionBits == 8)
+			if (Planes.TopPlane.PlaneDot(IntersectionPt) <= 0 && Planes.BottomPlane.PlaneDot(IntersectionPt) <= 0)
 			{
 				// Intersection point is in the middle (horizontal)
 				return ETransformedBoxTestResult::BoxIntersectsPlane;
@@ -270,8 +270,7 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		if (bIntersectsRight)
 		{
 			// check that we are within the top/bottom plane
-			const uint8 RegionBits = DetermineRegion(IntersectionPt, Planes);
-			if (RegionBits == 0 || RegionBits == 4 || RegionBits == 8)
+			if (Planes.TopPlane.PlaneDot(IntersectionPt) <= 0 && Planes.BottomPlane.PlaneDot(IntersectionPt) <= 0)
 			{
 				// intersection point is in the middle (horizontal)
 				return ETransformedBoxTestResult::BoxIntersectsPlane;
@@ -285,8 +284,7 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		if (bIntersectsTop)
 		{
 			// check that we are within the left/right planes
-			const uint8 RegionBits = DetermineRegion(IntersectionPt, Planes);
-			if (RegionBits == 0 || RegionBits == 1 || RegionBits == 2)
+			if (Planes.LeftPlane.PlaneDot(IntersectionPt) <= 0 && Planes.RightPlane.PlaneDot(IntersectionPt) <= 0)
 			{
 				// intersection point is in the middle (vertical)
 				return ETransformedBoxTestResult::BoxIntersectsPlane;
@@ -299,8 +297,7 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		                                                               IntersectionPt);
 		if (bIntersectsBottom)
 		{
-			const uint8 RegionBits = DetermineRegion(IntersectionPt, Planes);
-			if (RegionBits == 0 || RegionBits == 1 || RegionBits == 2)
+			if (Planes.LeftPlane.PlaneDot(IntersectionPt) <= 0 && Planes.RightPlane.PlaneDot(IntersectionPt) <= 0)
 			{
 				// intersection point is in the middle (vertical)
 				return ETransformedBoxTestResult::BoxIntersectsPlane;
