@@ -38,7 +38,7 @@ struct FRegionPlanes
  * selection region.
  */
 USTRUCT(BlueprintType)
-struct FSelectionRegion
+struct SELECTIONBOX_API FSelectionRegion
 {
 	GENERATED_BODY()
 public:
@@ -70,7 +70,7 @@ public:
  * Functions for helping with drag-box style selection, like in RTS games.
  */
 UCLASS(BlueprintType, meta=(DisplayName="Selection Box Function Library"))
-class USelectionBoxFunctionLibrary : public UBlueprintFunctionLibrary
+class SELECTIONBOX_API USelectionBoxFunctionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:

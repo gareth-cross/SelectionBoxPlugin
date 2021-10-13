@@ -214,7 +214,7 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 	for (int i = 0; i < 8; ++i)
 	{
 		const FVector Multiplier{PointMultipliers[i][0], PointMultipliers[i][1], PointMultipliers[i][2]};
-		WorldPts[i] = BoxTransform.InverseTransformVector(Extent * Multiplier + Origin);
+		WorldPts[i] = BoxTransform.TransformPosition(Extent * Multiplier + Origin);
 	}
 
 	// Compute the planes that define our region.
@@ -255,7 +255,8 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		if (bIntersectsLeft)
 		{
 			// check that we are within the top/bottom plane
-			if (Planes.TopPlane.PlaneDot(IntersectionPt) <= 0 && Planes.BottomPlane.PlaneDot(IntersectionPt) <= 0.0)
+			const uint8 RegionBits = DetermineRegion(IntersectionPt, Planes);
+			if (RegionBits == 0 || RegionBits == 4 || RegionBits == 8)
 			{
 				// Intersection point is in the middle (horizontal)
 				return ETransformedBoxTestResult::BoxIntersectsPlane;
@@ -269,7 +270,8 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		if (bIntersectsRight)
 		{
 			// check that we are within the top/bottom plane
-			if (Planes.TopPlane.PlaneDot(IntersectionPt) <= 0 && Planes.BottomPlane.PlaneDot(IntersectionPt) <= 0.0)
+			const uint8 RegionBits = DetermineRegion(IntersectionPt, Planes);
+			if (RegionBits == 0 || RegionBits == 4 || RegionBits == 8)
 			{
 				// intersection point is in the middle (horizontal)
 				return ETransformedBoxTestResult::BoxIntersectsPlane;
@@ -283,7 +285,8 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		if (bIntersectsTop)
 		{
 			// check that we are within the left/right planes
-			if (Planes.LeftPlane.PlaneDot(IntersectionPt) <= 0 && Planes.RightPlane.PlaneDot(IntersectionPt) <= 0)
+			const uint8 RegionBits = DetermineRegion(IntersectionPt, Planes);
+			if (RegionBits == 0 || RegionBits == 1 || RegionBits == 2)
 			{
 				// intersection point is in the middle (vertical)
 				return ETransformedBoxTestResult::BoxIntersectsPlane;
@@ -296,7 +299,8 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
 		                                                               IntersectionPt);
 		if (bIntersectsBottom)
 		{
-			if (Planes.LeftPlane.PlaneDot(IntersectionPt) <= 0 && Planes.RightPlane.PlaneDot(IntersectionPt) <= 0)
+			const uint8 RegionBits = DetermineRegion(IntersectionPt, Planes);
+			if (RegionBits == 0 || RegionBits == 1 || RegionBits == 2)
 			{
 				// intersection point is in the middle (vertical)
 				return ETransformedBoxTestResult::BoxIntersectsPlane;
@@ -367,8 +371,10 @@ bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsComponent(const FSelec
 		return false;
 	}
 	const FBoxSphereBounds LocalBounds = Component->CalcLocalBounds();
-	return SelectionRegionOverlapsTransformedBox(Region, Component->GetComponentTransform(), LocalBounds.Origin,
-	                                             LocalBounds.BoxExtent) != ETransformedBoxTestResult::NoIntersection;
+	const ETransformedBoxTestResult Result = SelectionRegionOverlapsTransformedBox(
+		Region, Component->GetComponentTransform(), LocalBounds.Origin,
+		LocalBounds.BoxExtent);
+	return Result != ETransformedBoxTestResult::NoIntersection;
 }
 
 bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsActor(const FSelectionRegion& Region, AActor* const Actor,
@@ -380,7 +386,7 @@ bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsActor(const FSelection
 		return false;
 	}
 	const FBox Box = Actor->CalculateComponentsBoundingBoxInLocalSpace(bIncludeFromNonColliding, bIncludeChildActors);
-	return SelectionRegionOverlapsTransformedBox(Region, Actor->GetActorTransform(), Box.GetCenter(), Box.GetExtent())
-		!=
-		ETransformedBoxTestResult::NoIntersection;
+	const ETransformedBoxTestResult Result = SelectionRegionOverlapsTransformedBox(
+		Region, Actor->GetActorTransform(), Box.GetCenter(), Box.GetExtent());
+	return Result != ETransformedBoxTestResult::NoIntersection;
 }
