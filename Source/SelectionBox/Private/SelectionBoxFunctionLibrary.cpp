@@ -392,20 +392,33 @@ bool USelectionBoxFunctionLibrary::CreateSelectionRegionForBoxCorners(APlayerCon
 }
 
 bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsComponent(const FSelectionRegion& Region,
-                                                                    USceneComponent* const Component)
+                                                                    const USceneComponent* const Component)
 {
 	if (!IsValid(Component))
 	{
 		return false;
 	}
 	const FBoxSphereBounds LocalBounds = Component->CalcLocalBounds();
+	const FTransform& ComponentTransform = Component->GetComponentTransform();
+
+	// Compute planes in the world frame, and the box in the world frame.
+	const FBoxSphereBounds BoxWorld = LocalBounds.TransformBy(ComponentTransform);
+	const FRegionPlanes Planes = Region.ComputePlanes();
+
+	// Possibly eliminate w/ the sphere check first.
+	if (!SelectionRegionOverlapsSphere2(Planes, BoxWorld.Origin, BoxWorld.SphereRadius))
+	{
+		return false;
+	}
+
 	const ETransformedBoxTestResult Result = SelectionRegionOverlapsTransformedBox2(
-		Region, Region.ComputePlanes(), Component->GetComponentTransform(), LocalBounds.Origin,
+		Region, Planes, ComponentTransform, LocalBounds.Origin,
 		LocalBounds.BoxExtent);
 	return Result != ETransformedBoxTestResult::NoIntersection;
 }
 
-bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsActor(const FSelectionRegion& Region, AActor* const Actor,
+bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsActor(const FSelectionRegion& Region,
+                                                                const AActor* const Actor,
                                                                 const bool bIncludeFromNonColliding,
                                                                 const bool bIncludeChildActors)
 {

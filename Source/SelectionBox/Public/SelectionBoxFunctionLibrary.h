@@ -165,7 +165,7 @@ public:
 	 * the provided selection region. If it does, returns true.
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	static bool SelectionRegionOverlapsComponent(const FSelectionRegion& Region, USceneComponent* Component);
+	static bool SelectionRegionOverlapsComponent(const FSelectionRegion& Region, const USceneComponent* Component);
 
 	/**
 	 * Check if the provided selection region overlaps the oriented bounding box of the given actor.
@@ -174,7 +174,7 @@ public:
 	 * or overlaps the provided selection region. If it does, returns true.
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	static bool SelectionRegionOverlapsActor(const FSelectionRegion& Region, AActor* Actor,
+	static bool SelectionRegionOverlapsActor(const FSelectionRegion& Region, const AActor* Actor,
 	                                         bool bIncludeFromNonColliding,
 	                                         bool bIncludeChildActors);
 
