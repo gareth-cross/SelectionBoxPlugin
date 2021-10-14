@@ -209,10 +209,10 @@ constexpr IntPair BoxEdges[12] = {
 ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsTransformedBox(
 	const FSelectionRegion& Region, const FTransform& BoxTransform, const FVector& Origin, const FVector& Extent)
 {
-	return SelectionRegionOverlapsTransformedBox(Region, Region.ComputePlanes(), BoxTransform, Origin, Extent);
+	return SelectionRegionOverlapsTransformedBox2(Region, Region.ComputePlanes(), BoxTransform, Origin, Extent);
 }
 
-ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsTransformedBox(
+ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsTransformedBox2(
 	const FSelectionRegion& Region, const FRegionPlanes& Planes, const FTransform& BoxTransform, const FVector& Origin,
 	const FVector& Extent)
 {
@@ -324,12 +324,12 @@ bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsSphere(const FSelectio
                                                                  const FVector& SphereOrigin, const float Radius)
 {
 	// Compute the region planes (some wasted work here...)
-	return SelectionRegionOverlapsSphere(Region.ComputePlanes(), SphereOrigin, Radius);
+	return SelectionRegionOverlapsSphere2(Region.ComputePlanes(), SphereOrigin, Radius);
 }
 
-bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsSphere(const FRegionPlanes& Planes,
-                                                                 const FVector& SphereOrigin,
-                                                                 const float Radius)
+bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsSphere2(const FRegionPlanes& Planes,
+                                                                  const FVector& SphereOrigin,
+                                                                  const float Radius)
 {
 	const float DLeft = Planes.LeftPlane.PlaneDot(SphereOrigin);
 	const float DRight = Planes.RightPlane.PlaneDot(SphereOrigin);
@@ -399,8 +399,8 @@ bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsComponent(const FSelec
 		return false;
 	}
 	const FBoxSphereBounds LocalBounds = Component->CalcLocalBounds();
-	const ETransformedBoxTestResult Result = SelectionRegionOverlapsTransformedBox(
-		Region, Component->GetComponentTransform(), LocalBounds.Origin,
+	const ETransformedBoxTestResult Result = SelectionRegionOverlapsTransformedBox2(
+		Region, Region.ComputePlanes(), Component->GetComponentTransform(), LocalBounds.Origin,
 		LocalBounds.BoxExtent);
 	return Result != ETransformedBoxTestResult::NoIntersection;
 }
@@ -414,7 +414,19 @@ bool USelectionBoxFunctionLibrary::SelectionRegionOverlapsActor(const FSelection
 		return false;
 	}
 	const FBox Box = Actor->CalculateComponentsBoundingBoxInLocalSpace(bIncludeFromNonColliding, bIncludeChildActors);
-	const ETransformedBoxTestResult Result = SelectionRegionOverlapsTransformedBox(
-		Region, Actor->GetActorTransform(), Box.GetCenter(), Box.GetExtent());
+	const FBoxSphereBounds BoxWorld = Box.TransformBy(Actor->GetActorTransform());
+
+	// Pre-compute planes, which we need for the full check anyways:
+	const FRegionPlanes Planes = Region.ComputePlanes();
+
+	// Check if we can skip the rest of the check by evaluating the bounding world-frame sphere:
+	if (!SelectionRegionOverlapsSphere2(Planes, BoxWorld.Origin, BoxWorld.SphereRadius))
+	{
+		return false;
+	}
+
+	// If not, run the full test:
+	const ETransformedBoxTestResult Result = SelectionRegionOverlapsTransformedBox2(
+		Region, Planes, Actor->GetActorTransform(), Box.GetCenter(), Box.GetExtent());
 	return Result != ETransformedBoxTestResult::NoIntersection;
 }

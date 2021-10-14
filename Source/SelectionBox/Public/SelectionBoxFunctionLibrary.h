@@ -22,8 +22,12 @@ enum class ETransformedBoxTestResult : uint8
  * Planes computed from FSelectionRegion. These planes define the frustum (only in 4 dimensions, since we
  * omit the near/far planes) in which the selection must fall.
  */
-struct FRegionPlanes
+USTRUCT(BlueprintType)
+struct SELECTIONBOX_API FRegionPlanes
 {
+	GENERATED_BODY()
+public:
+	// TODO(gareth): Pack these in FMatrix so we can test all w/ TransformPosition()
 	FPlane LeftPlane;
 	FPlane RightPlane;
 	FPlane TopPlane;
@@ -119,11 +123,12 @@ public:
 	                                                                       const FVector& Extent);
 
 	// Version of the above that accepts the pre-computed planes as an argument.
-	static ETransformedBoxTestResult SelectionRegionOverlapsTransformedBox(const FSelectionRegion& Region,
-	                                                                       const FRegionPlanes& Planes,
-	                                                                       const FTransform& BoxTransform,
-	                                                                       const FVector& Origin,
-	                                                                       const FVector& Extent);
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	static ETransformedBoxTestResult SelectionRegionOverlapsTransformedBox2(const FSelectionRegion& Region,
+	                                                                        const FRegionPlanes& Planes,
+	                                                                        const FTransform& BoxTransform,
+	                                                                        const FVector& Origin,
+	                                                                        const FVector& Extent);
 
 	/**
 	 * Check if the provided region contains any part of the specified world-aligned sphere.
@@ -134,9 +139,10 @@ public:
 	                                          float Radius);
 
 	// Version of the above that accepts the pre-computed planes as an argument.
-	static bool SelectionRegionOverlapsSphere(const FRegionPlanes& Planes,
-	                                          const FVector& SphereOrigin,
-	                                          float Radius);
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	static bool SelectionRegionOverlapsSphere2(const FRegionPlanes& Planes,
+	                                           const FVector& SphereOrigin,
+	                                           float Radius);
 
 	/**
 	 * Create FSelectionRegion from a pair of pixel coordinates that define a selection box in screen space.
@@ -171,4 +177,11 @@ public:
 	static bool SelectionRegionOverlapsActor(const FSelectionRegion& Region, AActor* Actor,
 	                                         bool bIncludeFromNonColliding,
 	                                         bool bIncludeChildActors);
+
+	// Pre-compute the planes for a given selection region.
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	static FRegionPlanes ComputePlanesForRegion(const FSelectionRegion& Region)
+	{
+		return Region.ComputePlanes();
+	}
 };
