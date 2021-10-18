@@ -17,3 +17,7 @@ At a high-level, this method operates as follows:
     - One of the corner rays of the frustum intersects the OBB.
     - One of the corners of the OBB falls within the frustum.
     - One of the edges of OBB intersects the frustum. Cohen-Sutherland algorithm is used to speed this up a bit.
+
+Example image: 
+
+![Image of OBBs being selected.](example.png)
