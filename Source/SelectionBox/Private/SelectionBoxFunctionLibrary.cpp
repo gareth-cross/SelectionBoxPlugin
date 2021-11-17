@@ -202,12 +202,12 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
     WorldPts[i] = BoxTransform.TransformPosition(Extent * Multiplier + Origin);
   }
 
-  //	Assign regions to points
+  // Assign regions to points
   uint8 Regions[8];
   for (int i = 0; i < 8; ++i) {
     Regions[i] = DetermineRegion(WorldPts[i], Planes);
     if (!Regions[i]) {
-      return ETransformedBoxTestResult::BoxCornerInsideRegion; //	early exit, one point is within the box
+      return ETransformedBoxTestResult::BoxCornerInsideRegion; // early exit, one point is within the box
     }
   }
 
@@ -216,7 +216,7 @@ ETransformedBoxTestResult USelectionBoxFunctionLibrary::SelectionRegionOverlapsT
     const uint8 RegionFirst = Regions[Line.i];
     const uint8 RegionSecond = Regions[Line.j];
     const bool bMightIntersect = (RegionFirst & RegionSecond) == 0;
-    constexpr bool bUseEarlyExit = true; //	Shaves about ~15% off if a lot of boxes don't overlap at all.
+    constexpr bool bUseEarlyExit = true; // Shaves about ~15% off if a lot of boxes don't overlap at all.
 
     // If this test fails (cohen sutherland algorithm) then we can early exit this line, it can't possibly intersect
     if (!bMightIntersect && bUseEarlyExit) {
