@@ -3,12 +3,10 @@
 
 #define LOCTEXT_NAMESPACE "FSelectionBoxModule"
 
-void FSelectionBoxModule::StartupModule()
-{
+void FSelectionBoxModule::StartupModule() {
 }
 
-void FSelectionBoxModule::ShutdownModule()
-{
+void FSelectionBoxModule::ShutdownModule() {
 }
 
 #undef LOCTEXT_NAMESPACE
